@@ -3,25 +3,34 @@ import { useMutation } from 'react-query'
 
 import axios from 'axios'
 
+interface PostData {
+    id: number;
+    title: string;
+    description: string;
+  }
+  interface PostResponse {
+    id: number;
+  }
+  
 
 export default function Post(){
-    const [title,setTitle] = useState('')
-    const [description, setDescription] = useState('')
-    const [message, setMessage] = useState('')
+    const [title,setTitle] = useState<string>('')
+    const [description, setDescription] = useState<string>('')
+    const [message, setMessage] = useState<PostResponse>({ id: 0 })
 
-    async function createPost() {
+    const {isLoading, isError, error, mutate} = useMutation<PostResponse, unknown, PostData>(createPost, {retry: 3})
+
+
+    async function createPost(data: PostData): Promise<PostResponse> {
         
-        try{
-            const response = await axios.post('http://localhost:3000/posts')
+        
+            const response = await axios.post<PostResponse>('http://localhost:3000/posts',data)
             setMessage(response.data)
-        }catch(err){
-            console.log(err)
-        }
-        
+            return response.data;
+    
     }
     
-    const {isLoading, isError, error, mutate} = useMutation(createPost, {retry: 3})
-
+    
     return(
         <Fragment>
             <div className='post'>
@@ -34,13 +43,9 @@ export default function Post(){
 
                 <p> Created a new Post ID: {message && message.id}</p>
                 <div style={{color: 'gray', background: '#234'}}>
-        {isLoading
-          ? "Saving...": ""
-        }
-        {
-            isError
-            ? error.message : ""
-        }
+                {isLoading ? 'Saving...' : ''}
+                {isError ? (error as Error).message : ''}
+    
       </div>
             </div>
         </Fragment>
